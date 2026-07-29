@@ -26,7 +26,7 @@ body {
   color: var(--text);
   background: var(--bg);
   font-family: "Inter", Arial, Helvetica, sans-serif;
-  cursor: default;
+  cursor: auto;
 }
 
 body {
@@ -45,6 +45,18 @@ button {
   color: inherit;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input,
+.card,
+.nav-link,
+.primary-action,
+.secondary-action,
+.profile,
+.suggestion,
+.close {
+  cursor: pointer;
 }
 
 .app {

@@ -137,6 +137,8 @@
       card.focus();
     };
 
+    card.onmouseover = card.onmouseenter;
+
     card.onmouseleave = function () {
       card.className = "card focusable";
     };
@@ -488,6 +490,19 @@
 
     document.addEventListener("keydown", handleKeydown);
     document.addEventListener("mousemove", showPlayerOverlay);
+    document.addEventListener("cursorStateChange", function (event) {
+      document.body.className = event.detail && event.detail.visibility ? "magic-cursor-visible" : "magic-cursor-hidden";
+    });
+    document.addEventListener("mouseover", function (event) {
+      var target = event.target;
+      while (target && target !== document.body) {
+        if (target.className && String(target.className).indexOf("focusable") !== -1 && target.focus) {
+          target.focus();
+          return;
+        }
+        target = target.parentNode;
+      }
+    });
     document.addEventListener("focusin", function (event) {
       if (event.target && event.target.className && String(event.target.className).indexOf("focusable") !== -1) {
         state.lastFocused = event.target;
