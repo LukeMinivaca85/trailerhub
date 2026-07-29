@@ -503,13 +503,14 @@
   function handleKeydown(event) {
     var modalOpen = byId("modal").className.indexOf("open") !== -1;
     var detailsOpen = byId("detailsPanel").className.indexOf("open") !== -1;
+    var enterPressed = event.key === "Enter" || event.key === "OK" || event.keyCode === 13;
 
     if (modalOpen) {
       showPlayerOverlay();
       if (isBackKey(event)) {
         event.preventDefault();
         closeModal();
-      } else if (event.key === "Enter" && state.player && state.player.getPlayerState) {
+      } else if (enterPressed && state.player && state.player.getPlayerState) {
         event.preventDefault();
         state.player.getPlayerState() === 1 ? state.player.pauseVideo() : state.player.playVideo();
       }
@@ -527,6 +528,12 @@
         event.preventDefault();
         focusCard(0, 0);
       }
+      return;
+    }
+
+    if (enterPressed) {
+      event.preventDefault();
+      activateTarget(document.activeElement, event);
       return;
     }
 
@@ -565,6 +572,7 @@
     });
 
     document.addEventListener("keydown", handleKeydown);
+    document.addEventListener("mousedown", handleGlobalActivation, true);
     document.addEventListener("mouseup", handleGlobalActivation, true);
     document.addEventListener("click", handleGlobalActivation, true);
     document.addEventListener("mousemove", showPlayerOverlay);
@@ -580,6 +588,12 @@
 
   function handleGlobalActivation(event) {
     var target = findInteractiveTarget(event.target);
+    if (!target) return;
+
+    activateTarget(target, event);
+  }
+
+  function activateTarget(target, event) {
     if (!target) return;
 
     if (target.id === "heroPlay") {
@@ -598,6 +612,11 @@
       activateOnce(event, closeModal);
     } else if (target.id === "detailsClose") {
       activateOnce(event, closeDetails);
+    } else if (hasClass(target, "card")) {
+      activateOnce(event, function () {
+        var movie = getCardMovie(target);
+        if (movie) openDetails(movie);
+      });
     }
   }
 
@@ -607,7 +626,8 @@
         target.id === "heroInfo" ||
         target.id === "detailsPlay" ||
         target.id === "closeButton" ||
-        target.id === "detailsClose") {
+        target.id === "detailsClose" ||
+        hasClass(target, "card")) {
         return target;
       }
 
@@ -615,6 +635,16 @@
     }
 
     return null;
+  }
+
+  function getCardMovie(card) {
+    var row = Number(card.getAttribute("data-row"));
+    var col = Number(card.getAttribute("data-col"));
+    return state.rows[row] && state.rows[row][col] ? state.rows[row][col] : null;
+  }
+
+  function hasClass(element, className) {
+    return !!(element && element.className && (" " + element.className + " ").indexOf(" " + className + " ") !== -1);
   }
 
   function loadYouTubePlayer() {
