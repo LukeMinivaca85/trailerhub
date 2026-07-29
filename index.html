@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#02030a">
   <title>Trailer Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -23,7 +26,12 @@
       </nav>
 
       <div class="search-box">
-        <span class="search-icon">⌕</span>
+        <span class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m16.5 16.5 4 4"></path>
+          </svg>
+        </span>
         <input id="searchInput" class="search focusable" type="text" placeholder="Buscar trailers" autocomplete="off" inputmode="search">
         <div id="suggestions" class="suggestions" aria-live="polite"></div>
       </div>
@@ -43,7 +51,10 @@
         <div id="heroMeta" class="hero-meta"></div>
         <p id="heroDescription" class="hero-description">Carregando experiências cinematográficas...</p>
         <div class="hero-actions">
-          <button id="heroPlay" class="primary-action focusable" type="button">▶ Assistir trailer</button>
+          <button id="heroPlay" class="primary-action focusable" type="button">
+            <span class="play-icon" aria-hidden="true"></span>
+            <span>Assistir trailer</span>
+          </button>
           <button id="heroInfo" class="secondary-action focusable" type="button">Mais informações</button>
         </div>
       </div>
@@ -54,14 +65,17 @@
 
   <section id="detailsPanel" class="details-panel" aria-hidden="true">
     <div class="details-card">
-      <button id="detailsClose" class="close focusable" type="button" aria-label="Fechar">✕</button>
+      <button id="detailsClose" class="close focusable" type="button" aria-label="Fechar"></button>
       <img id="detailsBackdrop" class="details-backdrop" alt="">
       <div class="details-shade"></div>
       <div class="details-content">
         <h2 id="detailsTitle"></h2>
         <div id="detailsMeta" class="details-meta"></div>
         <p id="detailsOverview"></p>
-        <button id="detailsPlay" class="primary-action focusable" type="button">▶ Assistir trailer</button>
+        <button id="detailsPlay" class="primary-action focusable" type="button">
+          <span class="play-icon" aria-hidden="true"></span>
+          <span>Assistir trailer</span>
+        </button>
       </div>
     </div>
   </section>
@@ -71,7 +85,7 @@
       <div id="yt"></div>
       <div id="playerLoading" class="player-status visible">Carregando trailer...</div>
       <div id="playerOverlay" class="player-overlay">
-        <button id="closeButton" class="close focusable" type="button" aria-label="Fechar trailer">✕</button>
+        <button id="closeButton" class="close focusable" type="button" aria-label="Fechar trailer"></button>
         <div>
           <div id="playerTitle" class="player-title">Trailer Hub</div>
           <div class="player-hint">Enter pausa/reproduz • Esc/Back sai</div>

@@ -25,7 +25,8 @@ body {
   overflow: hidden;
   color: var(--text);
   background: var(--bg);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Inter", Arial, Helvetica, sans-serif;
+  cursor: default;
 }
 
 body {
@@ -39,7 +40,11 @@ input {
 }
 
 button {
+  -webkit-appearance: none;
+  appearance: none;
   color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .app {
@@ -130,10 +135,22 @@ button {
   z-index: 2;
   top: 50%;
   left: 18px;
+  width: 26px;
+  height: 26px;
   color: var(--muted);
-  font-size: 30px;
   transform: translateY(-54%);
   pointer-events: none;
+}
+
+.search-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .search {
@@ -287,6 +304,10 @@ button {
 .secondary-action {
   height: 66px;
   padding: 0 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
   border-radius: 10px;
   font-size: 23px;
   font-weight: 900;
@@ -303,6 +324,16 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: #fff;
   background: rgba(255, 255, 255, 0.14);
+}
+
+.play-icon {
+  width: 0;
+  height: 0;
+  display: inline-block;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 16px solid currentColor;
+  transform: translateX(2px);
 }
 
 .content {
@@ -346,6 +377,7 @@ button {
   color: inherit;
   background: transparent;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .poster-wrap {
@@ -422,7 +454,8 @@ button {
 }
 
 .card:focus .poster-wrap,
-.card:hover .poster-wrap {
+.card:hover .poster-wrap,
+.card.pointer-active .poster-wrap {
   border-color: rgba(255, 255, 255, 0.86);
   transform: scale(1.08) translateZ(0);
   box-shadow:
@@ -545,15 +578,34 @@ button {
 }
 
 .close {
+  position: relative;
   width: 58px;
   height: 58px;
   border: 0;
   border-radius: 50%;
   color: #fff;
   background: rgba(255, 255, 255, 0.16);
-  font-size: 25px;
-  font-weight: 900;
   cursor: pointer;
+}
+
+.close::before,
+.close::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 3px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.close::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
 }
 
 .details-card {

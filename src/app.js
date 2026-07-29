@@ -56,7 +56,11 @@
   }
 
   function ratingOf(item) {
-    return item.vote_average ? "★ " + Number(item.vote_average).toFixed(1) : "★ --";
+    return item.vote_average ? Number(item.vote_average).toFixed(1) : "--";
+  }
+
+  function playLabel() {
+    return '<span class="play-icon" aria-hidden="true"></span><span>Assistir trailer</span>';
   }
 
   function setHero(movie) {
@@ -66,7 +70,7 @@
     byId("heroTitle").textContent = titleOf(movie);
     byId("heroMeta").textContent = [
       yearOf(movie),
-      ratingOf(movie),
+      "Nota " + ratingOf(movie),
       movie.media_type === "tv" ? "Série" : "Filme",
       "Trailer"
     ].filter(Boolean).join("  •  ");
@@ -126,6 +130,15 @@
 
     card.onclick = function () {
       openDetails(movie);
+    };
+
+    card.onmouseenter = function () {
+      card.className = "card focusable pointer-active";
+      card.focus();
+    };
+
+    card.onmouseleave = function () {
+      card.className = "card focusable";
     };
 
     card.onfocus = function () {
@@ -245,9 +258,10 @@
   function openDetails(movie) {
     var panel = byId("detailsPanel");
     byId("detailsTitle").textContent = titleOf(movie);
-    byId("detailsMeta").textContent = [yearOf(movie), ratingOf(movie), movie.media_type === "tv" ? "Série" : "Filme", "HD"].filter(Boolean).join("  •  ");
+    byId("detailsMeta").textContent = [yearOf(movie), "Nota " + ratingOf(movie), movie.media_type === "tv" ? "Série" : "Filme", "HD"].filter(Boolean).join("  •  ");
     byId("detailsOverview").textContent = movie.overview || "Trailer e detalhes disponíveis para este título.";
     byId("detailsBackdrop").src = tmdb.image(movie.backdrop_path, "original");
+    byId("detailsPlay").innerHTML = playLabel();
     byId("detailsPlay").onclick = function () {
       openTrailer(movie);
     };
@@ -460,6 +474,17 @@
         runSearch(value);
       }, 320);
     };
+
+    byId("app").addEventListener("click", function (event) {
+      var target = event.target;
+      while (target && target !== document.body) {
+        if (target.className && String(target.className).indexOf("focusable") !== -1 && target.focus) {
+          target.focus();
+          break;
+        }
+        target = target.parentNode;
+      }
+    });
 
     document.addEventListener("keydown", handleKeydown);
     document.addEventListener("mousemove", showPlayerOverlay);
