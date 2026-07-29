@@ -13,7 +13,8 @@
     pendingVideo: null,
     searchTimer: null,
     overlayTimer: null,
-    lastFocused: null
+    lastFocused: null,
+    lastActivation: 0
   };
 
   var rowConfigs = [
@@ -128,13 +129,16 @@
       '<span class="card-year">' + escapeHtml(yearOf(movie)) + '</span>'
     ].join("");
 
-    card.onclick = function () {
+    bindActivate(card, function () {
       openDetails(movie);
-    };
+    });
 
     card.onmouseenter = function () {
       card.className = "card focusable pointer-active";
-      card.focus();
+      state.focusRow = rowIndex;
+      state.focusCol = colIndex;
+      state.lastFocused = card;
+      setHero(movie);
     };
 
     card.onmouseover = card.onmouseenter;
@@ -264,9 +268,9 @@
     byId("detailsOverview").textContent = movie.overview || "Trailer e detalhes disponíveis para este título.";
     byId("detailsBackdrop").src = tmdb.image(movie.backdrop_path, "original");
     byId("detailsPlay").innerHTML = playLabel();
-    byId("detailsPlay").onclick = function () {
+    bindActivate(byId("detailsPlay"), function () {
       openTrailer(movie);
-    };
+    });
     panel.className = "details-panel open";
     panel.setAttribute("aria-hidden", "false");
     byId("detailsPlay").focus();
@@ -351,6 +355,31 @@
     }, 50);
   }
 
+  function bindActivate(element, handler) {
+    if (!element) return;
+
+    element.onclick = function (event) {
+      activateOnce(event, handler);
+    };
+
+    element.onmouseup = function (event) {
+      activateOnce(event, handler);
+    };
+
+    element.ontouchend = function (event) {
+      activateOnce(event, handler);
+    };
+  }
+
+  function activateOnce(event, handler) {
+    var now = Date.now();
+    if (now - state.lastActivation < 260) return;
+    state.lastActivation = now;
+
+    if (event && event.preventDefault) event.preventDefault();
+    handler();
+  }
+
   function runSearch(query) {
     if (!query) {
       byId("suggestions").className = "suggestions";
@@ -387,10 +416,10 @@
     suggestions.className = "suggestions open";
 
     Array.prototype.forEach.call(suggestions.querySelectorAll(".suggestion"), function (button, index) {
-      button.onclick = function () {
+      bindActivate(button, function () {
         byId("searchInput").value = titleOf(items[index]);
         openDetails(items[index]);
-      };
+      });
     });
   }
 
@@ -458,16 +487,16 @@
   }
 
   function bindEvents() {
-    byId("heroPlay").onclick = function () {
+    bindActivate(byId("heroPlay"), function () {
       if (state.heroMovie) openTrailer(state.heroMovie);
-    };
+    });
 
-    byId("heroInfo").onclick = function () {
+    bindActivate(byId("heroInfo"), function () {
       if (state.heroMovie) openDetails(state.heroMovie);
-    };
+    });
 
-    byId("closeButton").onclick = closeModal;
-    byId("detailsClose").onclick = closeDetails;
+    bindActivate(byId("closeButton"), closeModal);
+    bindActivate(byId("detailsClose"), closeDetails);
 
     byId("searchInput").oninput = function () {
       var value = this.value.trim();
@@ -492,16 +521,6 @@
     document.addEventListener("mousemove", showPlayerOverlay);
     document.addEventListener("cursorStateChange", function (event) {
       document.body.className = event.detail && event.detail.visibility ? "magic-cursor-visible" : "magic-cursor-hidden";
-    });
-    document.addEventListener("mouseover", function (event) {
-      var target = event.target;
-      while (target && target !== document.body) {
-        if (target.className && String(target.className).indexOf("focusable") !== -1 && target.focus) {
-          target.focus();
-          return;
-        }
-        target = target.parentNode;
-      }
     });
     document.addEventListener("focusin", function (event) {
       if (event.target && event.target.className && String(event.target.className).indexOf("focusable") !== -1) {
