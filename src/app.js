@@ -89,6 +89,7 @@
     backdrop.src = tmdb.image(movie.backdrop_path, "original");
     poster.src = tmdb.image(movie.poster_path, "w500");
     poster.alt = titleOf(movie);
+    setLinkHref(byId("heroPlay"), youtubeSearchUrl(movie));
   }
 
   function skeletonRow(title) {
@@ -270,6 +271,7 @@
     byId("detailsOverview").textContent = movie.overview || "Trailer e detalhes disponíveis para este título.";
     byId("detailsBackdrop").src = tmdb.image(movie.backdrop_path, "original");
     byId("detailsPlay").innerHTML = playLabel();
+    setLinkHref(byId("detailsPlay"), youtubeSearchUrl(movie));
     bindActivate(byId("detailsPlay"), function () {
       openTrailer(movie);
     });
@@ -324,6 +326,7 @@
     modal.setAttribute("aria-hidden", "false");
     loading.className = "player-status visible";
     loading.textContent = "Clique recebido. Buscando trailer...";
+    setLinkHref(byId("externalTrailerLink"), youtubeSearchUrl(movie));
     showPlayerOverlay();
 
     getTrailer(movie)
@@ -343,6 +346,16 @@
   function playTrailer(videoId) {
     clearTimeout(state.playerFallbackTimer);
     state.pendingVideo = videoId;
+    setLinkHref(byId("heroPlay"), youtubeWatchUrl(videoId));
+    setLinkHref(byId("detailsPlay"), youtubeWatchUrl(videoId));
+    setLinkHref(byId("externalTrailerLink"), youtubeWatchUrl(videoId));
+
+    if (isWebOS()) {
+      byId("playerLoading").textContent = "Abrindo trailer no YouTube...";
+      window.location.href = youtubeWatchUrl(videoId);
+      return;
+    }
+
     loadTrailerIframe(videoId);
   }
 
@@ -352,6 +365,22 @@
 
     byId("playerLoading").className = "player-status";
     byId("yt").innerHTML = '<iframe title="Trailer" src="' + url + '" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>';
+  }
+
+  function youtubeSearchUrl(movie) {
+    return "https://www.youtube.com/results?search_query=" + encodeURIComponent(titleOf(movie) + " trailer");
+  }
+
+  function youtubeWatchUrl(videoId) {
+    return "https://www.youtube.com/watch?v=" + encodeURIComponent(videoId);
+  }
+
+  function setLinkHref(link, href) {
+    if (link && href) link.setAttribute("href", href);
+  }
+
+  function isWebOS() {
+    return /web0s|webos|webOS|SmartTV|NetCast/i.test(window.navigator.userAgent || "");
   }
 
   function closeModal() {

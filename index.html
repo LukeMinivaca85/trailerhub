@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="build-badge">build 1.0.1</div>
+  <div class="build-badge">build 1.0.2</div>
 
   <div class="app" id="app">
     <header class="topbar" id="topbar">
@@ -53,10 +53,10 @@
         <div id="heroMeta" class="hero-meta"></div>
         <p id="heroDescription" class="hero-description">Carregando experiências cinematográficas...</p>
         <div class="hero-actions">
-          <button id="heroPlay" class="primary-action focusable" type="button" onclick="return TrailerHubActions.playHero(event)">
+          <a id="heroPlay" class="primary-action focusable" href="https://www.youtube.com/results?search_query=Trailer%20Hub%20trailer" onclick="return TrailerHubActions.playHero(event)">
             <span class="play-icon" aria-hidden="true"></span>
             <span>Assistir trailer</span>
-          </button>
+          </a>
           <button id="heroInfo" class="secondary-action focusable" type="button" onclick="return TrailerHubActions.showHeroInfo(event)">Mais informações</button>
         </div>
       </div>
@@ -74,10 +74,10 @@
         <h2 id="detailsTitle"></h2>
         <div id="detailsMeta" class="details-meta"></div>
         <p id="detailsOverview"></p>
-        <button id="detailsPlay" class="primary-action focusable" type="button" onclick="return TrailerHubActions.playDetails(event)">
+        <a id="detailsPlay" class="primary-action focusable" href="https://www.youtube.com/results?search_query=Trailer%20Hub%20trailer" onclick="return TrailerHubActions.playDetails(event)">
           <span class="play-icon" aria-hidden="true"></span>
           <span>Assistir trailer</span>
-        </button>
+        </a>
       </div>
     </div>
   </section>
@@ -91,6 +91,7 @@
         <div>
           <div id="playerTitle" class="player-title">Trailer Hub</div>
           <div class="player-hint">Enter pausa/reproduz • Esc/Back sai</div>
+          <a id="externalTrailerLink" class="external-trailer focusable" href="https://www.youtube.com/results?search_query=Trailer%20Hub%20trailer">Abrir no YouTube</a>
         </div>
       </div>
     </div>
