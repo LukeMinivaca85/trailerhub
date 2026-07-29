@@ -501,6 +501,8 @@ input,
 .primary-action:focus,
 .secondary-action:focus,
 .close:focus,
+.retry-trailer:focus,
+.external-trailer:focus,
 .suggestion:focus {
   box-shadow:
     0 0 0 4px #fff,
@@ -592,9 +594,11 @@ input,
   font-size: 20px;
 }
 
-.external-trailer {
+.external-trailer,
+.retry-trailer {
   height: 48px;
   margin-top: 18px;
+  margin-right: 10px;
   padding: 0 18px;
   display: inline-flex;
   align-items: center;
@@ -604,6 +608,12 @@ input,
   background: rgba(255, 255, 255, 0.14);
   font-size: 18px;
   font-weight: 900;
+}
+
+.retry-trailer {
+  border-color: rgba(255, 255, 255, 0.72);
+  color: #03040a;
+  background: #fff;
 }
 
 .player-status {

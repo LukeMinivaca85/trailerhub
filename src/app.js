@@ -10,6 +10,7 @@
     heroMovie: null,
     detailsMovie: null,
     pendingVideo: null,
+    trailerQueue: [],
     playerFallbackTimer: null,
     searchTimer: null,
     overlayTimer: null,
@@ -287,34 +288,55 @@
     if (!skipRestore) restoreFocus();
   }
 
-  function getTrailer(movie) {
+  function getTrailers(movie) {
     var type = movie.media_type === "tv" || movie.first_air_date ? "tv" : "movie";
     var path = "/" + type + "/" + movie.id + "/videos";
 
     return tmdb.request(path, {})
       .then(function (data) {
-        return pickTrailer(data.results);
+        return pickTrailers(data.results);
       })
-      .then(function (videoId) {
-        if (videoId) return videoId;
+      .then(function (videos) {
         return tmdb.request(path, { language: "en-US" }).then(function (data) {
-          return pickTrailer(data.results);
+          return uniqueVideos(videos.concat(pickTrailers(data.results)));
         });
       });
   }
 
-  function pickTrailer(results) {
+  function pickTrailers(results) {
     var videos = (results || []).filter(function (video) {
       return video.site === "YouTube" && video.key;
     });
 
-    var preferred = videos.filter(function (video) {
-      return video.type === "Trailer" && video.official;
-    })[0] || videos.filter(function (video) {
-      return video.type === "Trailer";
-    })[0] || videos[0];
+    videos.sort(function (a, b) {
+      return trailerScore(b) - trailerScore(a);
+    });
 
-    return preferred ? preferred.key : null;
+    return uniqueVideos(videos.map(function (video) {
+      return video.key;
+    }));
+  }
+
+  function trailerScore(video) {
+    var name = String(video.name || "").toLowerCase();
+    var score = 0;
+    if (video.type === "Trailer") score += 80;
+    if (video.official) score += 40;
+    if (name.indexOf("official") >= 0) score += 16;
+    if (name.indexOf("trailer") >= 0) score += 12;
+    if (name.indexOf("teaser") >= 0) score -= 20;
+    if (name.indexOf("clip") >= 0) score -= 28;
+    if (name.indexOf("featurette") >= 0) score -= 34;
+    return score;
+  }
+
+  function uniqueVideos(videos) {
+    var seen = {};
+    return videos.filter(function (videoId) {
+      if (!videoId || seen[videoId]) return false;
+      seen[videoId] = true;
+      return true;
+    });
   }
 
   function openTrailer(movie) {
@@ -329,14 +351,15 @@
     setLinkHref(byId("externalTrailerLink"), youtubeSearchUrl(movie));
     showPlayerOverlay();
 
-    getTrailer(movie)
-      .then(function (videoId) {
-        if (!videoId) {
+    getTrailers(movie)
+      .then(function (videoIds) {
+        state.trailerQueue = videoIds || [];
+        if (!state.trailerQueue.length) {
           loading.textContent = "Trailer não encontrado.";
           return;
         }
 
-        playTrailer(videoId);
+        playTrailer(state.trailerQueue[0]);
       })
       .catch(function () {
         loading.textContent = "Não foi possível carregar este trailer.";
@@ -349,6 +372,7 @@
     setLinkHref(byId("heroPlay"), youtubeWatchUrl(videoId));
     setLinkHref(byId("detailsPlay"), youtubeWatchUrl(videoId));
     setLinkHref(byId("externalTrailerLink"), youtubeWatchUrl(videoId));
+    byId("nextTrailerButton").style.display = state.trailerQueue.length > 1 ? "inline-flex" : "none";
 
     if (isWebOS()) {
       byId("playerLoading").textContent = "Abrindo trailer no YouTube...";
@@ -361,10 +385,15 @@
 
   function loadTrailerIframe(videoId) {
     var url = "https://www.youtube.com/embed/" + encodeURIComponent(videoId) +
-      "?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=0";
+      "?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1" + youtubeOriginParam();
 
     byId("playerLoading").className = "player-status";
-    byId("yt").innerHTML = '<iframe title="Trailer" src="' + url + '" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>';
+    byId("yt").innerHTML = '<iframe title="Trailer" src="' + url + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+  }
+
+  function youtubeOriginParam() {
+    if (window.location.protocol !== "http:" && window.location.protocol !== "https:") return "";
+    return "&origin=" + encodeURIComponent(window.location.origin);
   }
 
   function youtubeSearchUrl(movie) {
@@ -379,6 +408,14 @@
     if (link && href) link.setAttribute("href", href);
   }
 
+  function playNextTrailer() {
+    if (state.trailerQueue.length <= 1) return;
+    state.trailerQueue.push(state.trailerQueue.shift());
+    byId("playerLoading").className = "player-status visible";
+    byId("playerLoading").textContent = "Tentando outro trailer...";
+    playTrailer(state.trailerQueue[0]);
+  }
+
   function isWebOS() {
     return /web0s|webos|webOS|SmartTV|NetCast/i.test(window.navigator.userAgent || "");
   }
@@ -389,6 +426,7 @@
     clearTimeout(state.playerFallbackTimer);
     byId("yt").innerHTML = "";
     state.pendingVideo = null;
+    state.trailerQueue = [];
     restoreFocus();
   }
 
@@ -624,6 +662,8 @@
       });
     } else if (target.id === "closeButton") {
       activateOnce(event, closeModal);
+    } else if (target.id === "nextTrailerButton") {
+      activateOnce(event, playNextTrailer);
     } else if (target.id === "detailsClose") {
       activateOnce(event, closeDetails);
     } else if (hasClass(target, "card")) {
@@ -640,6 +680,7 @@
         target.id === "heroInfo" ||
         target.id === "detailsPlay" ||
         target.id === "closeButton" ||
+        target.id === "nextTrailerButton" ||
         target.id === "detailsClose" ||
         hasClass(target, "card")) {
         return target;
@@ -693,6 +734,10 @@
 
     closePlayer: function (event) {
       return activateOnce(event, closeModal);
+    },
+
+    nextTrailer: function (event) {
+      return activateOnce(event, playNextTrailer);
     }
   };
 
