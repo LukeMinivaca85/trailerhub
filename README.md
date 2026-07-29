@@ -30,3 +30,18 @@ npm run format
 - Xbox Edge
 - PlayStation Browser
 - Modern desktop browsers
+
+## Package
+
+LG webOS:
+
+```bash
+ares-package .
+```
+
+Samsung Tizen:
+
+```bash
+tizen build-web
+tizen package -t wgt -s default
+```
