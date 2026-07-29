@@ -256,10 +256,10 @@
     byId("detailsPlay").focus();
   }
 
-  function closeDetails() {
+  function closeDetails(skipRestore) {
     byId("detailsPanel").className = "details-panel";
     byId("detailsPanel").setAttribute("aria-hidden", "true");
-    restoreFocus();
+    if (!skipRestore) restoreFocus();
   }
 
   function getTrailer(movie) {
@@ -283,7 +283,7 @@
   function openTrailer(movie) {
     var modal = byId("modal");
     var loading = byId("playerLoading");
-    closeDetails();
+    closeDetails(true);
     byId("playerTitle").textContent = titleOf(movie);
     modal.className = "modal open";
     modal.setAttribute("aria-hidden", "false");
@@ -398,13 +398,23 @@
     }
   }
 
+  function isBackKey(event) {
+    return event.key === "Backspace" ||
+      event.key === "Escape" ||
+      event.key === "BrowserBack" ||
+      event.keyCode === 8 ||
+      event.keyCode === 27 ||
+      event.keyCode === 461 ||
+      event.keyCode === 10009;
+  }
+
   function handleKeydown(event) {
     var modalOpen = byId("modal").className.indexOf("open") !== -1;
     var detailsOpen = byId("detailsPanel").className.indexOf("open") !== -1;
 
     if (modalOpen) {
       showPlayerOverlay();
-      if (event.key === "Backspace" || event.key === "Escape" || event.key === "BrowserBack") {
+      if (isBackKey(event)) {
         event.preventDefault();
         closeModal();
       } else if (event.key === "Enter" && state.player && state.player.getPlayerState) {
@@ -414,7 +424,7 @@
       return;
     }
 
-    if (detailsOpen && (event.key === "Backspace" || event.key === "Escape" || event.key === "BrowserBack")) {
+    if (detailsOpen && isBackKey(event)) {
       event.preventDefault();
       closeDetails();
       return;
@@ -453,6 +463,11 @@
 
     document.addEventListener("keydown", handleKeydown);
     document.addEventListener("mousemove", showPlayerOverlay);
+    document.addEventListener("focusin", function (event) {
+      if (event.target && event.target.className && String(event.target.className).indexOf("focusable") !== -1) {
+        state.lastFocused = event.target;
+      }
+    });
   }
 
   window.onYouTubeIframeAPIReady = function () {

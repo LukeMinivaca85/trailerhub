@@ -1,0 +1,14 @@
+{
+  "id": "com.lucascorrea.trailerhub",
+  "version": "1.0.0",
+  "vendor": "Lucas Correa",
+  "type": "web",
+  "main": "index.html",
+  "title": "Trailer Hub",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "appDescription": "Premium trailer experience for Smart TVs.",
+  "resolution": "1920x1080",
+  "bgColor": "#02030a",
+  "iconColor": "#ffffff"
+}
