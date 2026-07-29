@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#02030a">
+  <title>Trailer Hub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar" id="topbar">
+      <div class="brand" aria-label="Trailer Hub">
+        <div class="brand-mark">L</div>
+        <span>Trailer Hub</span>
+      </div>
+
+      <nav class="nav" aria-label="Categorias principais">
+        <button class="nav-link focusable active" data-nav="home" type="button">Início</button>
+        <button class="nav-link focusable" data-nav="movies" type="button">Filmes</button>
+        <button class="nav-link focusable" data-nav="series" type="button">Séries</button>
+        <button class="nav-link focusable" data-nav="kids" type="button">Infantil</button>
+      </nav>
+
+      <div class="search-box">
+        <span class="search-icon">⌕</span>
+        <input id="searchInput" class="search focusable" type="text" placeholder="Buscar trailers" autocomplete="off" inputmode="search">
+        <div id="suggestions" class="suggestions" aria-live="polite"></div>
+      </div>
+
+      <button class="profile focusable" type="button" aria-label="Perfil">LC</button>
+    </header>
+
+    <section id="hero" class="hero" aria-live="polite">
+      <img id="heroBackdrop" class="hero-backdrop" alt="">
+      <div class="hero-poster-frame">
+        <img id="heroPoster" class="hero-poster" alt="">
+      </div>
+      <div class="hero-shade"></div>
+      <div class="hero-content">
+        <div class="eyebrow">Trailer em destaque</div>
+        <h1 id="heroTitle" class="hero-title">Trailer Hub</h1>
+        <div id="heroMeta" class="hero-meta"></div>
+        <p id="heroDescription" class="hero-description">Carregando experiências cinematográficas...</p>
+        <div class="hero-actions">
+          <button id="heroPlay" class="primary-action focusable" type="button">▶ Assistir trailer</button>
+          <button id="heroInfo" class="secondary-action focusable" type="button">Mais informações</button>
+        </div>
+      </div>
+    </section>
+
+    <main id="content" class="content" aria-live="polite"></main>
+  </div>
+
+  <section id="detailsPanel" class="details-panel" aria-hidden="true">
+    <div class="details-card">
+      <button id="detailsClose" class="close focusable" type="button" aria-label="Fechar">✕</button>
+      <img id="detailsBackdrop" class="details-backdrop" alt="">
+      <div class="details-shade"></div>
+      <div class="details-content">
+        <h2 id="detailsTitle"></h2>
+        <div id="detailsMeta" class="details-meta"></div>
+        <p id="detailsOverview"></p>
+        <button id="detailsPlay" class="primary-action focusable" type="button">▶ Assistir trailer</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="modal" class="modal" aria-hidden="true">
+    <div class="player-shell">
+      <div id="yt"></div>
+      <div id="playerLoading" class="player-status visible">Carregando trailer...</div>
+      <div id="playerOverlay" class="player-overlay">
+        <button id="closeButton" class="close focusable" type="button" aria-label="Fechar trailer">✕</button>
+        <div>
+          <div id="playerTitle" class="player-title">Trailer Hub</div>
+          <div class="player-hint">Enter pausa/reproduz • Esc/Back sai</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="src/tmdb.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "trailerhub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Trailer Hub for Smart TVs and modern browsers.",
+  "scripts": {
+    "lint": "eslint src/*.js",
+    "format": "prettier --write index.html styles.css src/*.js",
+    "serve": "python3 -m http.server 8080"
+  },
+  "devDependencies": {
+    "eslint": "^9.32.0",
+    "prettier": "^3.3.3"
+  }
+}
