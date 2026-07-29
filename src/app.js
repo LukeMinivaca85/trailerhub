@@ -120,6 +120,7 @@
     card.setAttribute("data-row", rowIndex);
     card.setAttribute("data-col", colIndex);
     card.setAttribute("aria-label", titleOf(movie));
+    card.setAttribute("onclick", "return TrailerHubActions.openCard(event, this)");
 
     var poster = tmdb.image(movie.poster_path, "w342");
     card.innerHTML = [
@@ -423,8 +424,11 @@
     if (now - state.lastActivation < 260) return;
     state.lastActivation = now;
 
-    if (event && event.preventDefault) event.preventDefault();
     handler();
+
+    if (event && event.preventDefault) event.preventDefault();
+    if (event && event.stopPropagation) event.stopPropagation();
+    return false;
   }
 
   function runSearch(query) {
@@ -636,6 +640,65 @@
 
     return null;
   }
+
+  window.TrailerHubActions = {
+    playHero: function (event) {
+      return activateOnce(event, function () {
+        if (state.heroMovie) {
+          openTrailer(state.heroMovie);
+        } else {
+          showImmediatePlayerMessage("Ainda carregando o destaque...");
+        }
+      });
+    },
+
+    showHeroInfo: function (event) {
+      return activateOnce(event, function () {
+        if (state.heroMovie) openDetails(state.heroMovie);
+      });
+    },
+
+    playDetails: function (event) {
+      return activateOnce(event, function () {
+        if (state.detailsMovie) {
+          openTrailer(state.detailsMovie);
+        } else if (state.heroMovie) {
+          openTrailer(state.heroMovie);
+        } else {
+          showImmediatePlayerMessage("Ainda carregando o trailer...");
+        }
+      });
+    },
+
+    openCard: function (event, card) {
+      return activateOnce(event, function () {
+        var movie = getCardMovie(card);
+        if (movie) openDetails(movie);
+      });
+    },
+
+    closeDetails: function (event) {
+      return activateOnce(event, closeDetails);
+    },
+
+    closePlayer: function (event) {
+      return activateOnce(event, closeModal);
+    }
+  };
+
+  function showImmediatePlayerMessage(message) {
+    byId("modal").className = "modal open";
+    byId("modal").setAttribute("aria-hidden", "false");
+    byId("playerTitle").textContent = "Trailer Hub";
+    byId("playerLoading").className = "player-status visible";
+    byId("playerLoading").textContent = message;
+    showPlayerOverlay();
+  }
+
+  window.onerror = function (message) {
+    showImmediatePlayerMessage("Erro no app: " + String(message || "falha desconhecida"));
+    return false;
+  };
 
   function getCardMovie(card) {
     var row = Number(card.getAttribute("data-row"));

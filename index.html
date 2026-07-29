@@ -51,11 +51,11 @@
         <div id="heroMeta" class="hero-meta"></div>
         <p id="heroDescription" class="hero-description">Carregando experiências cinematográficas...</p>
         <div class="hero-actions">
-          <button id="heroPlay" class="primary-action focusable" type="button">
+          <button id="heroPlay" class="primary-action focusable" type="button" onclick="return TrailerHubActions.playHero(event)">
             <span class="play-icon" aria-hidden="true"></span>
             <span>Assistir trailer</span>
           </button>
-          <button id="heroInfo" class="secondary-action focusable" type="button">Mais informações</button>
+          <button id="heroInfo" class="secondary-action focusable" type="button" onclick="return TrailerHubActions.showHeroInfo(event)">Mais informações</button>
         </div>
       </div>
     </section>
@@ -65,14 +65,14 @@
 
   <section id="detailsPanel" class="details-panel" aria-hidden="true">
     <div class="details-card">
-      <button id="detailsClose" class="close focusable" type="button" aria-label="Fechar"></button>
+      <button id="detailsClose" class="close focusable" type="button" aria-label="Fechar" onclick="return TrailerHubActions.closeDetails(event)"></button>
       <img id="detailsBackdrop" class="details-backdrop" alt="">
       <div class="details-shade"></div>
       <div class="details-content">
         <h2 id="detailsTitle"></h2>
         <div id="detailsMeta" class="details-meta"></div>
         <p id="detailsOverview"></p>
-        <button id="detailsPlay" class="primary-action focusable" type="button">
+        <button id="detailsPlay" class="primary-action focusable" type="button" onclick="return TrailerHubActions.playDetails(event)">
           <span class="play-icon" aria-hidden="true"></span>
           <span>Assistir trailer</span>
         </button>
@@ -85,7 +85,7 @@
       <div id="yt"></div>
       <div id="playerLoading" class="player-status visible">Carregando trailer...</div>
       <div id="playerOverlay" class="player-overlay">
-        <button id="closeButton" class="close focusable" type="button" aria-label="Fechar trailer"></button>
+        <button id="closeButton" class="close focusable" type="button" aria-label="Fechar trailer" onclick="return TrailerHubActions.closePlayer(event)"></button>
         <div>
           <div id="playerTitle" class="player-title">Trailer Hub</div>
           <div class="player-hint">Enter pausa/reproduz • Esc/Back sai</div>
