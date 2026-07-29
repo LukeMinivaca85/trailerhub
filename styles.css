@@ -71,6 +71,21 @@ input,
     linear-gradient(180deg, #060915 0%, #02030a 54%, #02030a 100%);
 }
 
+.build-badge {
+  position: fixed;
+  z-index: 9999;
+  right: 22px;
+  bottom: 18px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.62);
+  background: rgba(0, 0, 0, 0.42);
+  font-size: 13px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
 .app::-webkit-scrollbar,
 .rail::-webkit-scrollbar {
   display: none;

@@ -323,7 +323,7 @@
     modal.className = "modal open";
     modal.setAttribute("aria-hidden", "false");
     loading.className = "player-status visible";
-    loading.textContent = "Carregando trailer...";
+    loading.textContent = "Clique recebido. Buscando trailer...";
     showPlayerOverlay();
 
     getTrailer(movie)
