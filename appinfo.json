@@ -10,5 +10,7 @@
   "appDescription": "Premium trailer experience for Smart TVs.",
   "resolution": "1920x1080",
   "bgColor": "#02030a",
-  "iconColor": "#ffffff"
+  "iconColor": "#ffffff",
+  "thirdPartyCookiesPolicy": "allow",
+  "useUnlimitedMediaPolicy": true
 }

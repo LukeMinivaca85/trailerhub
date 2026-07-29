@@ -9,8 +9,6 @@
     focusCol: 0,
     heroMovie: null,
     detailsMovie: null,
-    player: null,
-    playerReady: false,
     pendingVideo: null,
     playerFallbackTimer: null,
     searchTimer: null,
@@ -343,20 +341,9 @@
   }
 
   function playTrailer(videoId) {
-    var loading = byId("playerLoading");
     clearTimeout(state.playerFallbackTimer);
-
-    if (state.playerReady && state.player && state.player.loadVideoById) {
-      loading.className = "player-status";
-      state.player.loadVideoById(videoId);
-      return;
-    }
-
     state.pendingVideo = videoId;
-    state.playerFallbackTimer = setTimeout(function () {
-      if (state.playerReady && state.player && state.player.loadVideoById) return;
-      loadTrailerIframe(videoId);
-    }, 1800);
+    loadTrailerIframe(videoId);
   }
 
   function loadTrailerIframe(videoId) {
@@ -371,11 +358,8 @@
     byId("modal").className = "modal";
     byId("modal").setAttribute("aria-hidden", "true");
     clearTimeout(state.playerFallbackTimer);
-    if (state.player && state.player.stopVideo) state.player.stopVideo();
     byId("yt").innerHTML = "";
-    state.playerReady = false;
-    state.player = null;
-    loadYouTubePlayer();
+    state.pendingVideo = null;
     restoreFocus();
   }
 
@@ -514,9 +498,6 @@
       if (isBackKey(event)) {
         event.preventDefault();
         closeModal();
-      } else if (enterPressed && state.player && state.player.getPlayerState) {
-        event.preventDefault();
-        state.player.getPlayerState() === 1 ? state.player.pauseVideo() : state.player.playVideo();
       }
       return;
     }
@@ -710,37 +691,6 @@
     return !!(element && element.className && (" " + element.className + " ").indexOf(" " + className + " ") !== -1);
   }
 
-  function loadYouTubePlayer() {
-    if (!window.YT || !window.YT.Player) return;
-
-    state.player = new YT.Player("yt", {
-      width: "100%",
-      height: "100%",
-      playerVars: {
-        autoplay: 1,
-        controls: 0,
-        rel: 0,
-        playsinline: 1,
-        modestbranding: 1
-      },
-      events: {
-        onReady: function () {
-          state.playerReady = true;
-          if (state.pendingVideo) {
-            byId("playerLoading").className = "player-status";
-            playTrailer(state.pendingVideo);
-            state.pendingVideo = null;
-          }
-        }
-      }
-    });
-  }
-
-  window.onYouTubeIframeAPIReady = function () {
-    loadYouTubePlayer();
-  };
-
   bindEvents();
-  loadYouTubePlayer();
   loadHome();
 })(window, document);
