@@ -8,9 +8,11 @@
     focusRow: 0,
     focusCol: 0,
     heroMovie: null,
+    detailsMovie: null,
     player: null,
     playerReady: false,
     pendingVideo: null,
+    playerFallbackTimer: null,
     searchTimer: null,
     overlayTimer: null,
     lastFocused: null,
@@ -263,6 +265,7 @@
 
   function openDetails(movie) {
     var panel = byId("detailsPanel");
+    state.detailsMovie = movie;
     byId("detailsTitle").textContent = titleOf(movie);
     byId("detailsMeta").textContent = [yearOf(movie), "Nota " + ratingOf(movie), movie.media_type === "tv" ? "Série" : "Filme", "HD"].filter(Boolean).join("  •  ");
     byId("detailsOverview").textContent = movie.overview || "Trailer e detalhes disponíveis para este título.";
@@ -279,25 +282,38 @@
   function closeDetails(skipRestore) {
     byId("detailsPanel").className = "details-panel";
     byId("detailsPanel").setAttribute("aria-hidden", "true");
+    state.detailsMovie = null;
     if (!skipRestore) restoreFocus();
   }
 
   function getTrailer(movie) {
     var type = movie.media_type === "tv" || movie.first_air_date ? "tv" : "movie";
-    return tmdb.request("/" + type + "/" + movie.id + "/videos", {})
+    var path = "/" + type + "/" + movie.id + "/videos";
+
+    return tmdb.request(path, {})
       .then(function (data) {
-        var videos = (data.results || []).filter(function (video) {
-          return video.site === "YouTube" && video.key;
+        return pickTrailer(data.results);
+      })
+      .then(function (videoId) {
+        if (videoId) return videoId;
+        return tmdb.request(path, { language: "en-US" }).then(function (data) {
+          return pickTrailer(data.results);
         });
-
-        var preferred = videos.filter(function (video) {
-          return video.type === "Trailer" && video.official;
-        })[0] || videos.filter(function (video) {
-          return video.type === "Trailer";
-        })[0] || videos[0];
-
-        return preferred ? preferred.key : null;
       });
+  }
+
+  function pickTrailer(results) {
+    var videos = (results || []).filter(function (video) {
+      return video.site === "YouTube" && video.key;
+    });
+
+    var preferred = videos.filter(function (video) {
+      return video.type === "Trailer" && video.official;
+    })[0] || videos.filter(function (video) {
+      return video.type === "Trailer";
+    })[0] || videos[0];
+
+    return preferred ? preferred.key : null;
   }
 
   function openTrailer(movie) {
@@ -318,22 +334,47 @@
           return;
         }
 
-        if (state.playerReady && state.player) {
-          loading.className = "player-status";
-          state.player.loadVideoById(videoId);
-        } else {
-          state.pendingVideo = videoId;
-        }
+        playTrailer(videoId);
       })
       .catch(function () {
         loading.textContent = "Não foi possível carregar este trailer.";
       });
   }
 
+  function playTrailer(videoId) {
+    var loading = byId("playerLoading");
+    clearTimeout(state.playerFallbackTimer);
+
+    if (state.playerReady && state.player && state.player.loadVideoById) {
+      loading.className = "player-status";
+      state.player.loadVideoById(videoId);
+      return;
+    }
+
+    state.pendingVideo = videoId;
+    state.playerFallbackTimer = setTimeout(function () {
+      if (state.playerReady && state.player && state.player.loadVideoById) return;
+      loadTrailerIframe(videoId);
+    }, 1800);
+  }
+
+  function loadTrailerIframe(videoId) {
+    var url = "https://www.youtube.com/embed/" + encodeURIComponent(videoId) +
+      "?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=0";
+
+    byId("playerLoading").className = "player-status";
+    byId("yt").innerHTML = '<iframe title="Trailer" src="' + url + '" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>';
+  }
+
   function closeModal() {
     byId("modal").className = "modal";
     byId("modal").setAttribute("aria-hidden", "true");
+    clearTimeout(state.playerFallbackTimer);
     if (state.player && state.player.stopVideo) state.player.stopVideo();
+    byId("yt").innerHTML = "";
+    state.playerReady = false;
+    state.player = null;
+    loadYouTubePlayer();
     restoreFocus();
   }
 
@@ -358,17 +399,23 @@
   function bindActivate(element, handler) {
     if (!element) return;
 
-    element.onclick = function (event) {
+    function onActivate(event) {
       activateOnce(event, handler);
-    };
+    }
 
-    element.onmouseup = function (event) {
-      activateOnce(event, handler);
-    };
+    element.onclick = onActivate;
+    element.onmouseup = onActivate;
+    element.onmousedown = onActivate;
+    element.ontouchend = onActivate;
 
-    element.ontouchend = function (event) {
-      activateOnce(event, handler);
-    };
+    if (element.addEventListener) {
+      element.addEventListener("pointerup", onActivate, false);
+      element.addEventListener("keyup", function (event) {
+        if (event.key === "Enter" || event.key === " " || event.keyCode === 13 || event.keyCode === 32) {
+          onActivate(event);
+        }
+      }, false);
+    }
   }
 
   function activateOnce(event, handler) {
@@ -518,6 +565,8 @@
     });
 
     document.addEventListener("keydown", handleKeydown);
+    document.addEventListener("mouseup", handleGlobalActivation, true);
+    document.addEventListener("click", handleGlobalActivation, true);
     document.addEventListener("mousemove", showPlayerOverlay);
     document.addEventListener("cursorStateChange", function (event) {
       document.body.className = event.detail && event.detail.visibility ? "magic-cursor-visible" : "magic-cursor-hidden";
@@ -529,7 +578,48 @@
     });
   }
 
-  window.onYouTubeIframeAPIReady = function () {
+  function handleGlobalActivation(event) {
+    var target = findInteractiveTarget(event.target);
+    if (!target) return;
+
+    if (target.id === "heroPlay") {
+      activateOnce(event, function () {
+        if (state.heroMovie) openTrailer(state.heroMovie);
+      });
+    } else if (target.id === "heroInfo") {
+      activateOnce(event, function () {
+        if (state.heroMovie) openDetails(state.heroMovie);
+      });
+    } else if (target.id === "detailsPlay") {
+      activateOnce(event, function () {
+        if (state.detailsMovie) openTrailer(state.detailsMovie);
+      });
+    } else if (target.id === "closeButton") {
+      activateOnce(event, closeModal);
+    } else if (target.id === "detailsClose") {
+      activateOnce(event, closeDetails);
+    }
+  }
+
+  function findInteractiveTarget(target) {
+    while (target && target !== document.body) {
+      if (target.id === "heroPlay" ||
+        target.id === "heroInfo" ||
+        target.id === "detailsPlay" ||
+        target.id === "closeButton" ||
+        target.id === "detailsClose") {
+        return target;
+      }
+
+      target = target.parentNode;
+    }
+
+    return null;
+  }
+
+  function loadYouTubePlayer() {
+    if (!window.YT || !window.YT.Player) return;
+
     state.player = new YT.Player("yt", {
       width: "100%",
       height: "100%",
@@ -545,14 +635,19 @@
           state.playerReady = true;
           if (state.pendingVideo) {
             byId("playerLoading").className = "player-status";
-            state.player.loadVideoById(state.pendingVideo);
+            playTrailer(state.pendingVideo);
             state.pendingVideo = null;
           }
         }
       }
     });
+  }
+
+  window.onYouTubeIframeAPIReady = function () {
+    loadYouTubePlayer();
   };
 
   bindEvents();
+  loadYouTubePlayer();
   loadHome();
 })(window, document);

@@ -8,12 +8,15 @@
   var CACHE_TTL = 1000 * 60 * 60 * 6;
 
   function encodeParams(params) {
+    params = params || {};
+
     var query = [
       "api_key=" + encodeURIComponent(API_KEY),
-      "language=pt-BR"
+      "language=" + encodeURIComponent(params.language || "pt-BR")
     ];
 
-    Object.keys(params || {}).forEach(function (key) {
+    Object.keys(params).forEach(function (key) {
+      if (key === "language") return;
       query.push(encodeURIComponent(key) + "=" + encodeURIComponent(params[key]));
     });
 
