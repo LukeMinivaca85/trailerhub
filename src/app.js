@@ -375,12 +375,85 @@
     byId("nextTrailerButton").style.display = state.trailerQueue.length > 1 ? "inline-flex" : "none";
 
     if (isWebOS()) {
-      byId("playerLoading").textContent = "Abrindo trailer no YouTube...";
-      window.location.href = youtubeWatchUrl(videoId);
+      openWebOSTrailer(videoId);
       return;
     }
 
     loadTrailerIframe(videoId);
+  }
+
+  function openWebOSTrailer(videoId) {
+    var watchUrl = youtubeWatchUrl(videoId);
+    var tvUrl = "https://www.youtube.com/tv#/watch?v=" + encodeURIComponent(videoId);
+    byId("playerLoading").textContent = "Abrindo no app YouTube da TV...";
+
+    launchWebOSApp(
+      "youtube.leanback.v4",
+      { contentTarget: tvUrl },
+      function () {
+        byId("playerLoading").textContent = "Abrindo no navegador da TV...";
+        launchWebOSApp(
+          "com.webos.app.browser",
+          { target: watchUrl },
+          function () {
+            window.location.href = watchUrl;
+          }
+        );
+      }
+    );
+  }
+
+  function launchWebOSApp(appId, params, onFailure) {
+    var request = {
+      method: "launch",
+      parameters: {
+        id: appId,
+        params: params || {}
+      },
+      onSuccess: function () {
+        closeModal();
+      },
+      onFailure: function () {
+        if (onFailure) onFailure();
+      }
+    };
+
+    if (window.webOS && window.webOS.service && window.webOS.service.request) {
+      window.webOS.service.request("luna://com.webos.applicationManager", request);
+      return;
+    }
+
+    if (window.PalmServiceBridge) {
+      try {
+        var bridge = new window.PalmServiceBridge();
+        bridge.onservicecallback = function (responseText) {
+          var response = {};
+          try {
+            response = JSON.parse(responseText || "{}");
+          } catch (error) {
+            response = {};
+          }
+
+          if (response.returnValue === false) {
+            if (onFailure) onFailure();
+            return;
+          }
+
+          closeModal();
+        };
+
+        bridge.call(
+          "luna://com.webos.applicationManager/launch",
+          JSON.stringify(request.parameters)
+        );
+        return;
+      } catch (error) {
+        if (onFailure) onFailure();
+        return;
+      }
+    }
+
+    if (onFailure) onFailure();
   }
 
   function loadTrailerIframe(videoId) {
