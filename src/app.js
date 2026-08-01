@@ -12,6 +12,7 @@
     pendingVideo: null,
     trailerQueue: [],
     playerFallbackTimer: null,
+    playerStarted: false,
     searchTimer: null,
     overlayTimer: null,
     lastFocused: null,
@@ -374,94 +375,41 @@
     setLinkHref(byId("externalTrailerLink"), youtubeWatchUrl(videoId));
     byId("nextTrailerButton").style.display = state.trailerQueue.length > 1 ? "inline-flex" : "none";
 
-    if (isWebOS()) {
-      openWebOSTrailer(videoId);
-      return;
-    }
-
     loadTrailerIframe(videoId);
   }
 
-  function openWebOSTrailer(videoId) {
-    var watchUrl = youtubeWatchUrl(videoId);
-    var tvUrl = "https://www.youtube.com/tv#/watch?v=" + encodeURIComponent(videoId);
-    byId("playerLoading").textContent = "Abrindo no app YouTube da TV...";
+  function loadTrailerIframe(videoId) {
+    var host = isWebOS() ? "https://www.youtube-nocookie.com" : "https://www.youtube.com";
+    var url = host + "/embed/" + encodeURIComponent(videoId) +
+      "?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&iv_load_policy=3" + youtubeOriginParam();
 
-    launchWebOSApp(
-      "youtube.leanback.v4",
-      { contentTarget: tvUrl },
-      function () {
-        byId("playerLoading").textContent = "Abrindo no navegador da TV...";
-        launchWebOSApp(
-          "com.webos.app.browser",
-          { target: watchUrl },
-          function () {
-            window.location.href = watchUrl;
-          }
-        );
-      }
-    );
+    state.playerStarted = false;
+    byId("playerLoading").className = "player-status";
+    byId("yt").innerHTML = '<iframe id="youtubeFrame" title="Trailer" src="' + url + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+    armInAppPlaybackFallback(videoId);
   }
 
-  function launchWebOSApp(appId, params, onFailure) {
-    var request = {
-      method: "launch",
-      parameters: {
-        id: appId,
-        params: params || {}
-      },
-      onSuccess: function () {
-        closeModal();
-      },
-      onFailure: function () {
-        if (onFailure) onFailure();
-      }
-    };
+  function armInAppPlaybackFallback(videoId) {
+    clearTimeout(state.playerFallbackTimer);
+    state.playerFallbackTimer = setTimeout(function () {
+      if (state.pendingVideo !== videoId) return;
+      if (state.playerStarted) return;
+      handleInAppPlaybackFailure();
+    }, isWebOS() ? 12000 : 15000);
+  }
 
-    if (window.webOS && window.webOS.service && window.webOS.service.request) {
-      window.webOS.service.request("luna://com.webos.applicationManager", request);
+  function handleInAppPlaybackFailure() {
+    if (isWebOS() && state.trailerQueue.length > 1) {
+      byId("playerLoading").className = "player-status visible";
+      byId("playerLoading").innerHTML = '<div><strong>Esse trailer foi bloqueado</strong><span>Tentando outro trailer dentro do Trailer Hub...</span></div>';
+      setTimeout(playNextTrailer, 700);
       return;
     }
 
-    if (window.PalmServiceBridge) {
-      try {
-        var bridge = new window.PalmServiceBridge();
-        bridge.onservicecallback = function (responseText) {
-          var response = {};
-          try {
-            response = JSON.parse(responseText || "{}");
-          } catch (error) {
-            response = {};
-          }
-
-          if (response.returnValue === false) {
-            if (onFailure) onFailure();
-            return;
-          }
-
-          closeModal();
-        };
-
-        bridge.call(
-          "luna://com.webos.applicationManager/launch",
-          JSON.stringify(request.parameters)
-        );
-        return;
-      } catch (error) {
-        if (onFailure) onFailure();
-        return;
-      }
+    if (isWebOS()) {
+      byId("playerLoading").className = "player-status visible";
+      byId("playerLoading").innerHTML = '<div><strong>Trailer bloqueado pelo YouTube</strong><span>Este vídeo não permite reprodução incorporada na TV.</span></div>';
     }
-
-    if (onFailure) onFailure();
-  }
-
-  function loadTrailerIframe(videoId) {
-    var url = "https://www.youtube.com/embed/" + encodeURIComponent(videoId) +
-      "?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1" + youtubeOriginParam();
-
-    byId("playerLoading").className = "player-status";
-    byId("yt").innerHTML = '<iframe title="Trailer" src="' + url + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
   }
 
   function youtubeOriginParam() {
@@ -837,6 +785,30 @@
   function hasClass(element, className) {
     return !!(element && element.className && (" " + element.className + " ").indexOf(" " + className + " ") !== -1);
   }
+
+  window.addEventListener("message", function (event) {
+    var data = event.data;
+    if (!state.pendingVideo || !data) return;
+
+    if (typeof data === "string") {
+      try {
+        data = JSON.parse(data);
+      } catch (error) {
+        return;
+      }
+    }
+
+    if (!data || data.event !== "onStateChange") {
+      if (data && data.event === "onError") handleInAppPlaybackFailure();
+      return;
+    }
+
+    if (data.info === 1 || data.info === 3) {
+      state.playerStarted = true;
+      clearTimeout(state.playerFallbackTimer);
+      byId("playerLoading").className = "player-status";
+    }
+  });
 
   bindEvents();
   loadHome();

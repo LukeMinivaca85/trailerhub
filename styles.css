@@ -622,14 +622,35 @@ input,
   inset: 0;
   display: none;
   place-items: center;
+  padding: 56px;
   color: #fff;
-  background: #03040a;
-  font-size: 28px;
-  font-weight: 800;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(75, 163, 255, 0.18), transparent 28%),
+    linear-gradient(180deg, rgba(3, 4, 10, 0.86), #03040a 72%);
+  text-align: center;
 }
 
 .player-status.visible {
   display: grid;
+}
+
+.player-status div {
+  max-width: 760px;
+}
+
+.player-status strong {
+  display: block;
+  margin-bottom: 13px;
+  font-size: 34px;
+  font-weight: 950;
+}
+
+.player-status span {
+  display: block;
+  color: var(--muted);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .close {
