@@ -11,6 +11,7 @@
     detailsMovie: null,
     pendingVideo: null,
     trailerQueue: [],
+    playbackMode: 0,
     playerFallbackTimer: null,
     playerStarted: false,
     searchTimer: null,
@@ -370,6 +371,7 @@
   function playTrailer(videoId) {
     clearTimeout(state.playerFallbackTimer);
     state.pendingVideo = videoId;
+    state.playbackMode = 0;
     setLinkHref(byId("heroPlay"), youtubeWatchUrl(videoId));
     setLinkHref(byId("detailsPlay"), youtubeWatchUrl(videoId));
     setLinkHref(byId("externalTrailerLink"), youtubeWatchUrl(videoId));
@@ -379,9 +381,7 @@
   }
 
   function loadTrailerIframe(videoId) {
-    var host = isWebOS() ? "https://www.youtube-nocookie.com" : "https://www.youtube.com";
-    var url = host + "/embed/" + encodeURIComponent(videoId) +
-      "?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&iv_load_policy=3" + youtubeOriginParam();
+    var url = youtubePlaybackUrl(videoId, state.playbackMode);
 
     state.playerStarted = false;
     byId("playerLoading").className = "player-status";
@@ -399,6 +399,16 @@
   }
 
   function handleInAppPlaybackFailure() {
+    if (isWebOS() && state.pendingVideo && state.playbackMode < 2) {
+      state.playbackMode += 1;
+      byId("playerLoading").className = "player-status visible";
+      byId("playerLoading").innerHTML = '<div><strong>Tentando outro modo do YouTube</strong><span>Modo ' + (state.playbackMode + 1) + ' de 3, ainda dentro do Trailer Hub.</span></div>';
+      setTimeout(function () {
+        loadTrailerIframe(state.pendingVideo);
+      }, 700);
+      return;
+    }
+
     if (isWebOS() && state.trailerQueue.length > 1) {
       byId("playerLoading").className = "player-status visible";
       byId("playerLoading").innerHTML = '<div><strong>Esse trailer foi bloqueado</strong><span>Tentando outro trailer dentro do Trailer Hub...</span></div>';
@@ -408,8 +418,26 @@
 
     if (isWebOS()) {
       byId("playerLoading").className = "player-status visible";
-      byId("playerLoading").innerHTML = '<div><strong>Trailer bloqueado pelo YouTube</strong><span>Este vídeo não permite reprodução incorporada na TV.</span></div>';
+      byId("playerLoading").innerHTML = '<div><strong>O YouTube recusou esta TV</strong><span>O Trailer Hub tentou embed, nocookie e modo TV web sem sair do app.</span></div>';
+      byId("nextTrailerButton").style.display = state.trailerQueue.length > 1 ? "inline-flex" : "none";
+      showPlayerOverlay();
     }
+  }
+
+  function youtubePlaybackUrl(videoId, mode) {
+    var encoded = encodeURIComponent(videoId);
+
+    if (isWebOS() && mode === 1) {
+      return "https://www.youtube.com/embed/" + encoded +
+        "?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&iv_load_policy=3" + youtubeOriginParam();
+    }
+
+    if (isWebOS() && mode === 2) {
+      return "https://www.youtube.com/tv#/watch?v=" + encoded;
+    }
+
+    return "https://www.youtube-nocookie.com/embed/" + encoded +
+      "?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&iv_load_policy=3" + youtubeOriginParam();
   }
 
   function youtubeOriginParam() {
