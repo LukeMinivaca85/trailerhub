@@ -92,7 +92,7 @@
     backdrop.src = tmdb.image(movie.backdrop_path, "original");
     poster.src = tmdb.image(movie.poster_path, "w500");
     poster.alt = titleOf(movie);
-    setLinkHref(byId("heroPlay"), youtubeSearchUrl(movie));
+    setLinkHref(byId("heroPlay"), "#trailer");
   }
 
   function skeletonRow(title) {
@@ -274,7 +274,7 @@
     byId("detailsOverview").textContent = movie.overview || "Trailer e detalhes disponíveis para este título.";
     byId("detailsBackdrop").src = tmdb.image(movie.backdrop_path, "original");
     byId("detailsPlay").innerHTML = playLabel();
-    setLinkHref(byId("detailsPlay"), youtubeSearchUrl(movie));
+    setLinkHref(byId("detailsPlay"), "#trailer");
     bindActivate(byId("detailsPlay"), function () {
       openTrailer(movie);
     });
@@ -350,7 +350,7 @@
     modal.setAttribute("aria-hidden", "false");
     loading.className = "player-status visible";
     loading.textContent = "Clique recebido. Buscando trailer...";
-    setLinkHref(byId("externalTrailerLink"), youtubeSearchUrl(movie));
+    setLinkHref(byId("externalTrailerLink"), "#trailer");
     showPlayerOverlay();
 
     getTrailers(movie)
@@ -399,10 +399,10 @@
   }
 
   function handleInAppPlaybackFailure() {
-    if (isWebOS() && state.pendingVideo && state.playbackMode < 2) {
+    if (isWebOS() && state.pendingVideo && state.playbackMode < 3) {
       state.playbackMode += 1;
       byId("playerLoading").className = "player-status visible";
-      byId("playerLoading").innerHTML = '<div><strong>Tentando outro modo do YouTube</strong><span>Modo ' + (state.playbackMode + 1) + ' de 3, ainda dentro do Trailer Hub.</span></div>';
+      byId("playerLoading").innerHTML = '<div><strong>Tentando outro modo do YouTube</strong><span>Modo ' + (state.playbackMode + 1) + ' de 4, ainda dentro do Trailer Hub.</span></div>';
       setTimeout(function () {
         loadTrailerIframe(state.pendingVideo);
       }, 700);
@@ -418,7 +418,7 @@
 
     if (isWebOS()) {
       byId("playerLoading").className = "player-status visible";
-      byId("playerLoading").innerHTML = '<div><strong>O YouTube recusou esta TV</strong><span>O Trailer Hub tentou embed, nocookie e modo TV web sem sair do app.</span></div>';
+      byId("playerLoading").innerHTML = '<div><strong>O YouTube recusou esta TV</strong><span>O Trailer Hub tentou embed, nocookie e rotas diretas do YouTube TV sem sair do app.</span></div>';
       byId("nextTrailerButton").style.display = state.trailerQueue.length > 1 ? "inline-flex" : "none";
       showPlayerOverlay();
     }
@@ -433,7 +433,11 @@
     }
 
     if (isWebOS() && mode === 2) {
-      return "https://www.youtube.com/tv#/watch?v=" + encoded;
+      return "https://www.youtube.com/tv#/watch/video/control?v=" + encoded;
+    }
+
+    if (isWebOS() && mode === 3) {
+      return "https://www.youtube.com/tv#/watch/video/idle?v=" + encoded;
     }
 
     return "https://www.youtube-nocookie.com/embed/" + encoded +
